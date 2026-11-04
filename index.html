@@ -1,0 +1,1252 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Jaki Agent</title>
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'%3E%3Crect x='2' y='2' width='20' height='20' rx='6' fill='%234b58a6'/%3E%3Cpath d='M14.5 6.5V13a3.5 3.5 0 0 1-3.5 3.5 3.5 3.5 0 0 1-2.9-1.5' fill='none' stroke='white' stroke-width='2.4' stroke-linecap='round'/%3E%3Ccircle cx='9' cy='8.5' r='1.3' fill='white'/%3E%3C/svg%3E">
+<style>
+:root {
+  --bg: #f1efe9; --side: #e8e6df; --tx: #1d1c1a; --mu: #716e67; --bd: #d9d6cd;
+  --ac: #4b58a6; --user: #e8e6df; --box: #fff; --code: #ece9e1; --hv: rgba(60,58,52,.1);
+  --sh: 0 2px 14px rgba(20,20,19,.08);
+  --tk: #8b4d8f; --ts: #3f7d5c; --tn: #a07a2e; --tc: #8a8980;
+}
+[data-theme=dark] {
+  --bg: #19191a; --side: #121213; --tx: #ece9e2; --mu: #93908a; --bd: #343434; --hv: rgba(255,255,255,.07);
+  --user: #242423; --box: #1f1f1e; --code: #161212; --sh: 0 4px 22px rgba(0,0,0,.5);
+  --tk: #c892cc; --ts: #7bc99a; --tn: #d9ad6a; --tc: #83817b;
+  --ac: #7986d6;
+}
+* { box-sizing: border-box; }
+html, body { height: 100%; margin: 0; }
+body { display: flex; background: var(--bg); color: var(--tx); font: 15px/1.5 system-ui, -apple-system, "Segoe UI", sans-serif; overflow: hidden; }
+button { font: inherit; color: inherit; background: none; border: 0; cursor: pointer; }
+svg { pointer-events: none; flex-shrink: 0; }
+i[data-ic] { display: inline-flex; }
+button:focus-visible, textarea:focus-visible, input:focus-visible, select:focus-visible { outline: 2px solid var(--ac); outline-offset: 2px; }
+.btn { display: inline-flex; align-items: center; gap: 8px; }
+/* sidebar */
+#side { width: 272px; background: var(--side); border-right: 1px solid var(--bd); display: flex; flex-direction: column; padding: 14px 12px 12px; flex-shrink: 0; transition: margin-left .2s; z-index: 6; }
+body.sbc #side { margin-left: -272px; }
+.brand { display: flex; align-items: center; gap: 10px; padding: 2px 4px 14px; }
+.brand .logo { color: var(--ac); display: inline-flex; }
+.brand .bn { font: 700 21px/1 Georgia, serif; letter-spacing: -.01em; flex: 1; }
+.brand .ib { width: 32px; height: 32px; }
+.nb { width: 100%; justify-content: center; padding: 9px 12px; border-radius: 10px; font-weight: 600; color: var(--tx); background: var(--box); border: 1px solid var(--bd); }
+.nb i { color: var(--ac); }
+.nb:hover { border-color: var(--ac); }
+.srch { position: relative; margin: 10px 0 6px; }
+.srch i { position: absolute; left: 10px; top: 50%; transform: translateY(-50%); color: var(--mu); }
+#q { width: 100%; padding: 8px 10px 8px 32px; border-radius: 10px; border: 1px solid transparent; background: var(--hv); color: var(--tx); font: inherit; font-size: 13px; }
+#q:focus { background: var(--box); border-color: var(--bd); }
+#list { flex: 1; overflow-y: auto; margin: 4px -6px 6px 0; padding-right: 6px; scrollbar-width: thin; }
+.lbl { font-size: 12px; color: var(--mu); padding: 6px 10px; }
+.gl { font-size: 11px; font-weight: 600; letter-spacing: .04em; text-transform: uppercase; color: var(--mu); padding: 12px 10px 4px; }
+.item { position: relative; display: flex; align-items: center; gap: 6px; padding: 8px 10px; border-radius: 10px; cursor: pointer; color: var(--mu); }
+.item:hover { background: var(--hv); color: var(--tx); }
+.item.on { background: rgba(127,127,120,.18); color: var(--tx); font-weight: 500; }
+.item.on::before { content: ''; position: absolute; left: 0; top: 9px; bottom: 9px; width: 3px; border-radius: 3px; background: var(--ac); }
+.item span { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; flex: 1; }
+.item span[contenteditable=true] { text-overflow: clip; background: var(--box); color: var(--tx); outline: 2px solid var(--ac); border-radius: 4px; padding: 0 4px; cursor: text; }
+.ia { display: flex; gap: 2px; opacity: 0; }
+.item:hover .ia, .item:focus-within .ia { opacity: 1; }
+.item .x { display: grid; place-items: center; padding: 4px; border-radius: 6px; color: var(--mu); }
+.item .x:hover { background: var(--hv); color: var(--tx); }
+.item .x[data-del]:hover { color: #d9534f; }
+@media (hover: none) { .ia { opacity: 1; } }
+.foot { display: grid; grid-template-columns: 1fr 1fr; gap: 2px; border-top: 1px solid var(--bd); padding-top: 10px; }
+.foot button { padding: 8px 10px; border-radius: 10px; color: var(--mu); font-size: 13px; white-space: nowrap; }
+.foot button:hover { background: var(--hv); color: var(--tx); }
+#bk { display: none; position: fixed; inset: 0; background: rgba(0,0,0,.4); z-index: 5; }
+/* utama */
+#main { flex: 1; display: flex; flex-direction: column; min-width: 0; }
+header { display: flex; align-items: center; gap: 8px; padding: 10px 16px; min-height: 52px; }
+.ib { width: 34px; height: 34px; border-radius: 50%; color: var(--mu); display: grid; place-items: center; }
+.ib:hover { background: var(--hv); color: var(--tx); }
+#ttl { font-weight: 500; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; flex: 1; }
+#dot { width: 9px; height: 9px; border-radius: 50%; background: #d9534f; flex-shrink: 0; }
+#dot.ok { background: #4caf50; }
+.pkw { position: relative; }
+.pkb { display: flex; align-items: center; gap: 6px; border: 1px solid var(--bd); background: var(--box); border-radius: 10px; padding: 6px 10px; font-size: 13px; max-width: 280px; }
+.pkb span { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.pkb:hover { border-color: var(--ac); }
+.menu { display: none; position: absolute; right: 0; top: calc(100% + 6px); width: 290px; max-height: 70vh; overflow: auto; background: var(--box); border: 1px solid var(--bd); border-radius: 14px; box-shadow: var(--sh); padding: 6px; z-index: 20; }
+.menu.show { display: block; }
+.menu .mh { font-size: 12px; color: var(--mu); padding: 8px 10px 4px; }
+.menu button { display: flex; justify-content: space-between; align-items: center; width: 100%; text-align: left; padding: 7px 10px; border-radius: 8px; font-size: 13px; }
+.menu button:hover { background: var(--hv); }
+.menu button.on { color: var(--ac); }
+.menu input { width: calc(100% - 12px); margin: 4px 6px; padding: 7px 10px; border: 1px solid var(--bd); border-radius: 8px; background: var(--bg); color: var(--tx); font: inherit; font-size: 13px; }
+.menu hr { border: 0; border-top: 1px solid var(--bd); margin: 6px 0; }
+#scroll { flex: 1; overflow-y: auto; padding: 8px 16px 24px; }
+.col { max-width: 760px; margin: 0 auto; }
+.empty { text-align: center; padding-top: 14vh; }
+.empty b { color: var(--ac); font-size: 44px; display: block; }
+.empty h1 { font: 400 32px/1.25 Georgia, serif; margin: 8px 0 0; }
+.empty p { color: var(--mu); margin: 8px 0 18px; }
+.sug { display: flex; flex-wrap: wrap; gap: 8px; justify-content: center; }
+.sug button, .chips button { border: 1px solid var(--bd); background: var(--box); border-radius: 20px; padding: 6px 14px; font-size: 13px; }
+.sug button:hover, .chips button:hover { border-color: var(--ac); color: var(--ac); }
+.m { margin: 18px 0; }
+.u { display: flex; flex-direction: column; align-items: flex-end; gap: 6px; }
+.ub { background: var(--user); padding: 10px 16px; border-radius: 18px; max-width: 85%; white-space: pre-wrap; word-break: break-word; }
+.ub.long { max-height: 210px; overflow: hidden; -webkit-mask-image: linear-gradient(#000 75%, transparent); mask-image: linear-gradient(#000 75%, transparent); }
+.ub.long.open { max-height: none; -webkit-mask-image: none; mask-image: none; }
+.a { font: 16.5px/1.7 Georgia, "Times New Roman", serif; }
+.a p { margin: 0 0 12px; }
+.a h2, .a h3, .a h4, .a h5 { margin: 18px 0 8px; line-height: 1.3; }
+.a ul, .a ol { margin: 0 0 12px; padding-left: 24px; }
+.a li { margin: 3px 0; }
+.a blockquote { margin: 0 0 12px; padding-left: 14px; border-left: 3px solid var(--bd); color: var(--mu); }
+.a hr { border: 0; border-top: 1px solid var(--bd); margin: 16px 0; }
+.a a { color: var(--ac); }
+.a code { font: 13.5px ui-monospace, Consolas, monospace; background: var(--code); padding: 1px 6px; border-radius: 5px; }
+.code { margin: 0 0 14px; border: 1px solid var(--bd); border-radius: 12px; overflow: hidden; background: var(--code); }
+.ch { display: flex; justify-content: space-between; align-items: center; padding: 4px 8px 4px 14px; font: 12px system-ui; color: var(--mu); border-bottom: 1px solid var(--bd); }
+.ch .cs { display: flex; gap: 2px; }
+.ch button { display: inline-flex; align-items: center; gap: 5px; padding: 4px 8px; border-radius: 6px; color: var(--mu); font-size: 12px; }
+.ch button:hover { background: var(--hv); color: var(--tx); }
+.code pre { margin: 0; padding: 12px 14px; overflow-x: auto; font-size: 13px; line-height: 1.55; }
+.code code { background: none; padding: 0; font: 13px/1.55 ui-monospace, Consolas, monospace; }
+.tk { color: var(--tk); } .ts { color: var(--ts); } .tn { color: var(--tn); } .tc { color: var(--tc); font-style: italic; }
+.tw { overflow-x: auto; margin-bottom: 12px; }
+table { border-collapse: collapse; font: 14px system-ui; }
+th, td { border: 1px solid var(--bd); padding: 6px 10px; text-align: left; }
+th { background: var(--code); }
+details.think { font: 14px system-ui; color: var(--mu); margin-bottom: 10px; }
+details.think div { white-space: pre-wrap; border-left: 2px solid var(--bd); padding: 4px 0 4px 12px; margin-top: 6px; }
+.act { display: flex; align-items: center; gap: 2px; margin-top: -4px; }
+.act button { display: inline-flex; align-items: center; gap: 5px; font: 13px system-ui; color: var(--mu); padding: 4px 8px; border-radius: 8px; }
+.act button:hover { background: var(--hv); color: var(--tx); }
+.act small { color: var(--mu); font: 12px system-ui; margin-left: 6px; }
+.atts { display: flex; flex-wrap: wrap; gap: 8px; justify-content: flex-end; }
+.atts img { max-height: 160px; max-width: 240px; border-radius: 12px; border: 1px solid var(--bd); display: block; }
+.chip { display: flex; align-items: center; gap: 6px; border: 1px solid var(--bd); background: var(--box); border-radius: 10px; padding: 5px 10px; font-size: 13px; max-width: 240px; }
+.chip .cn { display: flex; align-items: center; gap: 6px; overflow: hidden; }
+.chip .cn span { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.chip button { color: var(--mu); display: inline-flex; }
+.chip button:hover { color: var(--tx); }
+.dots span { display: inline-block; width: 7px; height: 7px; margin-right: 5px; border-radius: 50%; background: var(--ac); animation: b 1.2s infinite; }
+.dots span:nth-child(2) { animation-delay: .15s; }
+.dots span:nth-child(3) { animation-delay: .3s; }
+@keyframes b { 0%, 60%, 100% { opacity: .25; } 30% { opacity: 1; } }
+@media (prefers-reduced-motion: reduce) { .dots span { animation: none; } }
+.err { border: 1px solid #d9534f; color: #d9534f; border-radius: 12px; padding: 10px 14px; font: 14px system-ui; white-space: pre-wrap; word-break: break-word; }
+.err button { display: block; margin-top: 8px; text-decoration: underline; }
+/* input */
+#dock { padding: 0 16px 14px; }
+#box { max-width: 760px; margin: 0 auto; background: var(--box); border: 1px solid var(--bd); border-radius: 22px; box-shadow: var(--sh); padding: 10px 12px; }
+#box.drag { border-color: var(--ac); }
+#pend { display: flex; flex-wrap: wrap; gap: 8px; margin-bottom: 8px; }
+#pend:empty { display: none; }
+#pend img { height: 40px; border-radius: 6px; display: block; }
+#in { width: 100%; border: 0; background: none; color: var(--tx); font: inherit; resize: none; max-height: 200px; padding: 4px; outline: 0; }
+.bar { display: flex; align-items: center; justify-content: space-between; }
+#go { background: var(--ac); color: #fff; }
+#go:hover { background: var(--ac); filter: brightness(1.1); }
+.hint { text-align: center; font-size: 12px; color: var(--mu); margin-top: 6px; }
+/* dialog */
+dialog { border: 1px solid var(--bd); border-radius: 16px; background: var(--bg); color: var(--tx); width: min(540px, 94vw); max-height: 92vh; padding: 20px; }
+dialog::backdrop { background: rgba(0,0,0,.45); }
+.dh { display: flex; align-items: center; justify-content: space-between; margin-bottom: 8px; }
+.dh h3 { margin: 0; font: 600 20px Georgia, serif; }
+dialog label { display: block; font-size: 13px; color: var(--mu); margin: 12px 0 4px; }
+dialog input, dialog textarea, dialog select { width: 100%; background: var(--box); color: var(--tx); border: 1px solid var(--bd); border-radius: 10px; padding: 8px 10px; font: inherit; }
+.cb { position: relative; }
+.cb .eye { position: absolute; right: 6px; top: 50%; transform: translateY(-50%); width: 28px; height: 28px; display: grid; place-items: center; color: var(--mu); border-radius: 6px; }
+.dd { display: none; position: absolute; left: 0; right: 0; top: 100%; margin-top: 4px; z-index: 10; background: var(--box); border: 1px solid var(--bd); border-radius: 10px; box-shadow: var(--sh); max-height: 190px; overflow: auto; }
+.dd button { display: flex; justify-content: space-between; gap: 10px; width: 100%; text-align: left; padding: 8px 10px; font-size: 14px; }
+.dd button:hover { background: var(--hv); }
+.dd small { color: var(--mu); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.chips { display: flex; flex-wrap: wrap; gap: 6px; margin: 6px 0; align-items: center; }
+.chips .on { border-color: var(--ac); color: var(--ac); }
+.tools { display: flex; gap: 8px; margin-top: 12px; }
+.tools button, .row button { padding: 8px 14px; border-radius: 10px; border: 1px solid var(--bd); }
+.tools button:hover, .row button:hover { background: var(--hv); }
+.row { display: flex; justify-content: flex-end; gap: 8px; margin-top: 16px; flex-wrap: wrap; }
+.row .pri { background: var(--ac); color: #fff; border-color: var(--ac); }
+.row .pri:hover { background: var(--ac); filter: brightness(1.1); }
+.row .dg { color: #d9534f; margin-right: auto; }
+.note { font-size: 13px; color: var(--mu); margin-top: 10px; white-space: pre-wrap; word-break: break-word; }
+.note.bad { color: #d9534f; } .note.good { color: #3f9a45; }
+#dv { width: min(760px, 94vw); }
+#dv pre { white-space: pre-wrap; word-break: break-word; max-height: 62vh; overflow: auto; background: var(--code); padding: 12px; border-radius: 10px; font: 13px/1.5 ui-monospace, Consolas, monospace; margin: 0; }
+#dv img { max-width: 100%; border-radius: 10px; }
+#toast { position: fixed; top: 16px; left: 50%; transform: translateX(-50%); background: var(--tx); color: var(--bg); padding: 8px 16px; border-radius: 10px; font-size: 14px; display: none; z-index: 99; }
+@media (max-width: 800px) {
+  #side { position: fixed; inset: 0 auto 0 0; transform: translateX(-100%); transition: transform .2s; }
+  body.sbc #side { margin-left: 0; }
+  #side.open { transform: none; box-shadow: var(--sh); }
+  #bk.show { display: block; }
+  .pkb { max-width: 150px; }
+}
+
+/* ---------- Orchestra ---------- */
+.seg { display: flex; flex-shrink: 0; border: 1px solid var(--bd); border-radius: 10px; overflow: hidden; background: var(--box); }
+.seg button { padding: 5px 11px; font-size: 13px; color: var(--mu); }
+.seg button:hover { background: var(--hv); }
+.seg button.on { background: var(--ac); color: #fff; }
+.orc { font: 13.5px/1.5 system-ui, -apple-system, "Segoe UI", sans-serif; border: 1px solid var(--bd); background: var(--box); border-radius: 12px; padding: 10px 12px; margin-bottom: 14px; }
+.orc-h { font-weight: 600; }
+.orc-m, .orc-sm, .orc-ph { color: var(--mu); }
+.orc-s { border-top: 1px solid var(--bd); margin-top: 8px; padding-top: 8px; }
+.orc-r { display: flex; justify-content: space-between; align-items: center; gap: 8px; }
+.orc-b { font-size: 12px; padding: 1px 9px; border-radius: 20px; border: 1px solid var(--bd); color: var(--mu); flex-shrink: 0; }
+.orc-b.running { color: var(--ac); border-color: var(--ac); }
+.orc-b.done { color: #3f9a45; border-color: #3f9a45; }
+.orc-b.failed { color: #d9534f; border-color: #d9534f; }
+.orc-i { margin-top: 4px; display: -webkit-box; -webkit-line-clamp: 3; -webkit-box-orient: vertical; overflow: hidden; word-break: break-word; }
+.orc details { margin-top: 6px; }
+.orc summary { cursor: pointer; color: var(--mu); }
+.orc-o { margin-top: 6px; padding-left: 12px; border-left: 2px solid var(--bd); font: 14px/1.6 Georgia, "Times New Roman", serif; max-height: 360px; overflow: auto; }
+.orc-e { margin-top: 6px; color: #d9534f; white-space: pre-wrap; word-break: break-word; }
+.orc-ph { margin-top: 8px; }
+#do { width: min(640px, 94vw); }
+fieldset.ag { border: 1px solid var(--bd); border-radius: 12px; margin: 12px 0 0; padding: 2px 12px 12px; }
+fieldset.ag legend { font-weight: 600; padding: 0 6px; }
+.ag-d { font-size: 13px; color: var(--mu); }
+fieldset.ag label.ag-on { display: flex; gap: 8px; align-items: center; color: var(--tx); }
+@media (max-width: 560px) {
+  header { flex-wrap: wrap; gap: 4px; padding: 8px 10px; }
+  .seg button { padding: 5px 8px; font-size: 12px; }
+  .pkb { max-width: 110px; }
+}
+
+/* ---------- Media ---------- */
+.vid { margin-bottom: 12px; font: 13.5px/1.5 system-ui, -apple-system, "Segoe UI", sans-serif; }
+.vid video { display: block; width: 100%; max-width: 640px; border-radius: 12px; background: #000; }
+.vid-m { color: var(--mu); margin-top: 6px; }
+.vid-m a { color: var(--ac); }
+.vid-m button { color: var(--mu); text-decoration: underline; }
+.anim { margin: 4px 0 14px; font: 13.5px/1.5 system-ui, -apple-system, "Segoe UI", sans-serif; }
+.anim-h { display: flex; justify-content: space-between; align-items: center; color: var(--mu); margin-bottom: 6px; }
+.anim-h button { display: inline-flex; align-items: center; gap: 5px; padding: 4px 8px; border-radius: 8px; color: var(--mu); }
+.anim-h button:hover { background: var(--hv); color: var(--tx); }
+.anim iframe { display: block; width: 100%; height: 420px; border: 1px solid var(--bd); border-radius: 12px; background: #fff; }
+dialog label.chk { display: flex; gap: 8px; align-items: center; color: var(--tx); }
+</style>
+</head>
+<body>
+<aside id="side">
+  <div class="brand">
+    <span class="logo" aria-hidden="true"><i data-ic="logo" data-s="30"></i></span>
+    <span class="bn">Jaki</span>
+    <button class="ib" id="theme" title="Ganti tema" aria-label="Ganti tema"><i data-ic="moon"></i></button>
+  </div>
+  <button class="nb btn" id="new"><i data-ic="plus"></i>Chat baru</button>
+  <div class="srch"><i data-ic="search" data-s="15"></i><input id="q" placeholder="Cari chat (Ctrl+K)" autocomplete="off"></div>
+  <div id="list"></div>
+  <div class="foot">
+    <button class="btn" id="bp"><i data-ic="server"></i>API & Model</button>
+    <button class="btn" id="bm"><i data-ic="mem"></i>Memori</button>
+    <button class="btn" id="bd"><i data-ic="film"></i>Media</button>
+    <button class="btn" id="bs"><i data-ic="sliders"></i>Atur</button>
+  </div>
+</aside>
+<div id="bk"></div>
+
+<div id="main">
+  <header>
+    <button class="ib" id="menu" aria-label="Buka atau tutup sidebar" title="Sidebar"><i data-ic="side" data-s="20"></i></button>
+    <div id="ttl">Chat baru</div>
+    <span id="dot" title="Status proxy"></span>
+    <div class="seg" id="mode" role="group" aria-label="Mode chat"><button data-om="chat" aria-pressed="true">Chat Biasa</button><button data-om="orchestra" aria-pressed="false">Orchestra</button></div>
+    <button class="ib" id="bo" title="Kelola Orkestra" aria-label="Kelola Orkestra"><i data-ic="orc"></i></button>
+    <div class="pkw">
+      <button class="pkb" id="pk"><span id="pk-t">Pilih API</span><i data-ic="down" data-s="14"></i></button>
+      <div class="menu" id="pkm"></div>
+    </div>
+  </header>
+  <div id="scroll"><div class="col" id="chat"></div></div>
+  <div id="dock">
+    <div id="box">
+      <div id="pend"></div>
+      <textarea id="in" rows="1" placeholder="Tanya apa saja, atau tempel gambar di sini"></textarea>
+      <div class="bar">
+        <button class="ib" id="att" title="Lampirkan gambar atau file" aria-label="Lampirkan"><i data-ic="plus" data-s="20"></i></button>
+        <button class="ib" id="go" title="Kirim" aria-label="Kirim"></button>
+      </div>
+    </div>
+    <div class="hint">Enter kirim, Shift+Enter baris baru, Esc hentikan. Teks panjang yang ditempel otomatis jadi lampiran.</div>
+  </div>
+</div>
+
+<input type="file" id="file" multiple hidden accept="image/*,.pdf,.txt,.md,.csv,.json,.js,.ts,.jsx,.tsx,.py,.php,.html,.css,.sql,.xml,.yml,.yaml,.java,.c,.cpp,.cs,.go,.rs,.sh,.log,.env,.ini">
+
+<dialog id="dp">
+  <div class="dh"><h3>API & Model</h3><button class="ib" data-close="dp" aria-label="Tutup"><i data-ic="x"></i></button></div>
+  <div class="chips" id="pl"></div>
+  <label>Nama upstream (ketik lalu pilih saran)</label>
+  <div class="cb"><input id="p-name" autocomplete="off" placeholder="mis. openai, groq"><div class="dd" id="dd-name"></div></div>
+  <div class="chips" id="pre"></div>
+  <label>Tipe</label>
+  <select id="p-type">
+    <option value="anthropic">Anthropic compatible (/messages)</option>
+    <option value="openai">OpenAI compatible (/chat/completions)</option>
+  </select>
+  <label>Base URL</label>
+  <input id="p-url" autocomplete="off" placeholder="https://api.contoh.com/v1">
+  <label>API key (kosongkan untuk server lokal)</label>
+  <div class="cb"><input id="p-key" type="password" autocomplete="off" placeholder="sk-..." style="padding-right:38px"><button class="eye" id="p-eye" type="button" aria-label="Lihat key"><i data-ic="eye"></i></button></div>
+  <label>Model</label>
+  <div class="cb"><input id="p-model" autocomplete="off" placeholder="ketik atau pilih saran"><div class="dd" id="dd-model"></div></div>
+  <div class="chips" id="mchips"></div>
+  <div class="tools"><button id="p-fetch">Ambil daftar model</button><button id="p-test">Tes koneksi</button></div>
+  <div class="note" id="p-msg"></div>
+  <div class="row">
+    <button class="dg" id="p-del">Hapus API ini</button>
+    <button data-close="dp">Tutup</button>
+    <button class="pri" id="p-save">Simpan & pakai</button>
+  </div>
+</dialog>
+
+<dialog id="ds">
+  <div class="dh"><h3>Pengaturan</h3><button class="ib" data-close="ds" aria-label="Tutup"><i data-ic="x"></i></button></div>
+  <label>URL proxy lokal</label>
+  <input id="s-proxy">
+  <label>System prompt</label>
+  <textarea id="s-sys" rows="4"></textarea>
+  <label>Temperature (kosongkan untuk default model)</label>
+  <input id="s-temp" type="number" min="0" max="2" step="0.1">
+  <label>Max token jawaban</label>
+  <input id="s-max" type="number" min="64" step="64">
+  <div class="row">
+    <button class="dg" id="s-clr">Hapus semua riwayat</button>
+    <button id="s-exp">Ekspor chat (.md)</button>
+    <button class="pri" id="s-save">Simpan</button>
+  </div>
+</dialog>
+
+<dialog id="dv">
+  <div class="dh"><h3 id="dv-t"></h3><button class="ib" data-close="dv" aria-label="Tutup"><i data-ic="x"></i></button></div>
+  <div id="dv-b"></div>
+</dialog>
+
+<dialog id="do">
+  <div class="dh"><h3>Kelola Orkestra</h3><button class="ib" data-close="do" aria-label="Tutup"><i data-ic="x"></i></button></div>
+  <div class="note">Atur provider, model, dan system prompt tiap agent. Hanya berlaku untuk mode Orchestra; Chat Biasa tidak terpengaruh.</div>
+  <div id="o-body"></div>
+  <div class="note" id="o-msg"></div>
+  <div class="row">
+    <button class="dg" id="o-reset">Reset ke default</button>
+    <button data-close="do">Tutup</button>
+    <button class="pri" id="o-save">Simpan</button>
+  </div>
+</dialog>
+
+<dialog id="dmd">
+  <div class="dh"><h3>Media: video & animasi</h3><button class="ib" data-close="dmd" aria-label="Tutup"><i data-ic="x"></i></button></div>
+  <div class="note">Di Chat Biasa, Jaki memilih sendiri: jawab teks, buat animasi HTML, atau buat video MiniMax. Perintah manual: <b>/video ...</b>, <b>/animasi ...</b>, <b>/chat ...</b> (paksa jawaban teks).</div>
+  <label class="chk"><input type="checkbox" id="md-auto" style="width:auto"> Pilih otomatis dari isi prompt</label>
+  <label class="chk"><input type="checkbox" id="md-conf" style="width:auto"> Tanya konfirmasi sebelum membuat video (berbayar)</label>
+  <label>Provider MiniMax (untuk video)</label>
+  <select id="md-prov"></select>
+  <label>Model video</label>
+  <input id="md-model" list="md-models" autocomplete="off">
+  <datalist id="md-models"><option value="MiniMax-Hailuo-2.3"><option value="MiniMax-Hailuo-02"></datalist>
+  <label>Resolusi (video 10 detik otomatis memakai 768P)</label>
+  <select id="md-res"><option value="768P">768P</option><option value="1080P">1080P</option></select>
+  <div class="note" id="md-msg"></div>
+  <div class="row"><button data-close="dmd">Tutup</button><button class="pri" id="md-save">Simpan</button></div>
+</dialog>
+
+<div id="toast"></div>
+
+<script>
+const $ = id => document.getElementById(id);
+const K = { s: 'jaki3_sessions', c: 'jaki3_cfg', p: 'jaki3_provs', pid: 'jaki3_prov', cur: 'jaki3_cur', t: 'jaki3_theme', sb: 'jaki3_sbc' };
+const load = (k, d) => { try { return JSON.parse(localStorage.getItem(k)) ?? d; } catch { return d; } };
+
+/* ---------- Ikon ---------- */
+const I = {
+  logo: '<rect x="2" y="2" width="20" height="20" rx="6" fill="currentColor" stroke="none"/><path d="M14.5 6.5V13a3.5 3.5 0 0 1-3.5 3.5 3.5 3.5 0 0 1-2.9-1.5" stroke="#fff" stroke-width="2.4"/><circle cx="9" cy="8.5" r="1.3" fill="#fff" stroke="none"/>',
+  search: '<circle cx="11" cy="11" r="7"/><path d="M20 20l-3.5-3.5"/>',
+  plus: '<path d="M12 5v14M5 12h14"/>', x: '<path d="M6 6l12 12M18 6L6 18"/>', down: '<path d="M6 9l6 6 6-6"/>',
+  side: '<rect x="3" y="4" width="18" height="16" rx="2"/><path d="M9 4v16"/>',
+  sliders: '<circle cx="16" cy="6" r="2"/><path d="M4 6h10M18 6h2"/><circle cx="8" cy="12" r="2"/><path d="M4 12h2M10 12h10"/><circle cx="14" cy="18" r="2"/><path d="M4 18h8M16 18h4"/>',
+  server: '<rect x="3" y="4" width="18" height="7" rx="2"/><rect x="3" y="13" width="18" height="7" rx="2"/><path d="M7 7.5h.01M7 16.5h.01"/>',
+  moon: '<path d="M21 12.8A9 9 0 1 1 11.2 3a7 7 0 0 0 9.8 9.8z"/>',
+  copy: '<rect x="9" y="9" width="12" height="12" rx="2"/><path d="M5 15V5a2 2 0 0 1 2-2h8"/>',
+  check: '<path d="M5 12l5 5L20 7"/>', send: '<path d="M12 19V5M5 12l7-7 7 7"/>',
+  stop: '<rect x="6" y="6" width="12" height="12" rx="2" fill="currentColor"/>',
+  dl: '<path d="M12 4v11M7 11l5 5 5-5M5 20h14"/>', redo: '<path d="M20 11a8 8 0 1 0-2.3 5.7M20 4v7h-7"/>',
+  edit: '<path d="M4 20h4L19 9l-4-4L4 16v4z"/>', file: '<path d="M14 3H7a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V8z"/><path d="M14 3v5h5"/>',
+  eye: '<path d="M2 12s4-7 10-7 10 7 10 7-4 7-10 7S2 12 2 12z"/><circle cx="12" cy="12" r="3"/>',
+  mem: '<rect x="4" y="4" width="16" height="16" rx="2"/><rect x="9" y="9" width="6" height="6"/><path d="M9 1v3M15 1v3M9 20v3M15 20v3M1 9h3M1 15h3M20 9h3M20 15h3"/>',
+  orc: '<circle cx="12" cy="5" r="2"/><circle cx="5" cy="19" r="2"/><circle cx="19" cy="19" r="2"/><path d="M12 7v4M12 11l-6 6M12 11l6 6"/>',
+  film: '<rect x="3" y="4" width="18" height="16" rx="2"/><path d="M7 4v16M17 4v16M3 9h4M3 15h4M17 9h4M17 15h4"/>',
+};
+const ic = (n, s = 17) => `<svg width="${s}" height="${s}" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">${I[n]}</svg>`;
+const icons = () => document.querySelectorAll('[data-ic]').forEach(e => { e.innerHTML = ic(e.dataset.ic, +e.dataset.s || 17); });
+
+/* ---------- Data ---------- */
+const PRESETS = [
+  { name: 'MiniMax', type: 'openai', url: 'https://api.minimax.io/v1', models: ['MiniMax-M3'] },
+  { name: 'Anthropic', type: 'anthropic', url: 'https://api.anthropic.com/v1', models: ['claude-sonnet-5-5', 'claude-opus-5-5', 'claude-haiku-5-5'] },
+  { name: 'OpenAI', type: 'openai', url: 'https://api.openai.com/v1', models: ['gpt-4o', 'gpt-4o-mini'] },
+  { name: 'OpenRouter', type: 'openai', url: 'https://openrouter.ai/api/v1', models: ['openai/gpt-4o', 'google/gemini-2.5-flash'] },
+  { name: 'Groq', type: 'openai', url: 'https://api.groq.com/openai/v1', models: ['llama-3.3-70b-versatile'] },
+  { name: 'DeepSeek', type: 'openai', url: 'https://api.deepseek.com/v1', models: ['deepseek-chat', 'deepseek-reasoner'] },
+  { name: 'Google Gemini', type: 'openai', url: 'https://generativelanguage.googleapis.com/v1beta/openai', models: ['gemini-2.5-flash', 'gemini-2.5-pro'] },
+  { name: 'Ollama (lokal)', type: 'openai', url: 'http://localhost:11434/v1', models: ['llama3.2'] },
+  { name: 'LM Studio (lokal)', type: 'openai', url: 'http://localhost:1234/v1', models: [] },
+];
+const IDEAS = ['Jelaskan konsep async/await dengan contoh', 'Bantu debug kode yang aku lampirkan', 'Buatkan REST API sederhana di Node.js', 'Ringkas file yang aku kirim'];
+const EXT = { javascript: 'js', js: 'js', typescript: 'ts', ts: 'ts', python: 'py', py: 'py', html: 'html', css: 'css', json: 'json', php: 'php', bash: 'sh', sh: 'sh', sql: 'sql', java: 'java', jsx: 'jsx', tsx: 'tsx', md: 'md', yaml: 'yml', yml: 'yml', go: 'go', rust: 'rs', c: 'c', cpp: 'cpp' };
+const PASTE_MIN = 100000;
+
+let cfg = Object.assign({
+  proxy: 'http://' + (location.hostname || 'localhost') + ':3001', temp: '', max: 8192,
+  system: 'Kamu adalah Jaki, asisten AI yang ramah, jelas, dan solutif. Jawab dalam bahasa yang dipakai user dan gunakan Markdown seperlunya.',
+}, load(K.c, {}));
+let provs = load(K.p, []);
+let provId = localStorage.getItem(K.pid);
+let sessions = load(K.s, []);
+let curId = localStorage.getItem(K.cur);
+let pending = [], busy = false, ctrl = null, errMsg = '', editId = null, filter = '', draft = {};
+
+const esc = s => String(s).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
+const cur = () => sessions.find(s => s.id === curId);
+const prov = () => provs.find(p => p.id === provId) || provs[0];
+const uid = () => Math.random().toString(36).slice(2, 9) + Date.now().toString(36).slice(-4);
+const T = t => ({ type: 'text', text: t });
+const mob = () => matchMedia('(max-width:800px)').matches;
+
+function toast(t) {
+  const e = $('toast');
+  e.textContent = t; e.style.display = 'block';
+  clearTimeout(toast.t);
+  toast.t = setTimeout(() => e.style.display = 'none', 3200);
+}
+function save() {
+  localStorage.setItem(K.cur, curId);
+  try { localStorage.setItem(K.s, JSON.stringify(sessions)); }
+  catch {
+    sessions.forEach(s => s.msgs.forEach(m => (m.atts || []).forEach(a => { if (a.kind !== 'text') a.data = null; })));
+    try { localStorage.setItem(K.s, JSON.stringify(sessions)); } catch { toast('Penyimpanan penuh, hapus beberapa chat lama.'); }
+  }
+}
+const saveProvs = () => { localStorage.setItem(K.p, JSON.stringify(provs)); localStorage.setItem(K.pid, provId || ''); };
+function flash(t) {
+  const o = t.innerHTML;
+  t.innerHTML = ic('check', 14) + ' Tersalin';
+  setTimeout(() => t.innerHTML = o, 1500);
+}
+const copy = txt => navigator.clipboard.writeText(txt).catch(() => toast('Gagal menyalin.'));
+
+/* ---------- Highlight kode ---------- */
+const KW = 'function|const|let|var|return|if|else|elif|for|while|do|class|new|import|from|export|default|async|await|try|catch|except|finally|throw|raise|def|in|is|not|and|or|None|True|False|null|true|false|undefined|this|self|public|private|protected|static|void|int|string|bool|echo|foreach|as|use|namespace|extends|implements|fn|pub|impl|struct|enum|match|switch|case|break|continue|with|yield|lambda|pass|typeof|SELECT|FROM|WHERE|INSERT|UPDATE|DELETE|JOIN|CREATE|TABLE|INTO|VALUES|SET|ORDER|BY|GROUP|LIMIT';
+const HL_SRC = /(\/\*[\s\S]*?\*\/|\/\/[^\n]*|@H@)|("(?:\\.|[^"\\\n])*"|'(?:\\.|[^'\\\n])*'|`(?:\\.|[^`\\])*`)|(\b\d+(?:\.\d+)?\b)|(\b(?:@K@)\b)/.source;
+const hlCache = {};
+function hl(code, lang) {
+  lang = (lang || '').toLowerCase();
+  if (!lang || /^(text|txt|plaintext|md|markdown|diff|log|html|xml|svg)$/.test(lang)) return esc(code);
+  const hash = /^(py|python|sh|bash|shell|zsh|yaml|yml|rb|ruby|php|ini|toml|r|ps1|powershell|dockerfile)$/.test(lang);
+  const re = hlCache[hash] || (hlCache[hash] = new RegExp(HL_SRC.replace('@H@', hash ? '#[^\\n]*' : '(?!)').replace('@K@', KW), 'g'));
+  re.lastIndex = 0;
+  let o = '', i = 0, m;
+  while ((m = re.exec(code))) {
+    o += esc(code.slice(i, m.index));
+    const c = m[1] !== undefined ? 'c' : m[2] !== undefined ? 's' : m[3] !== undefined ? 'n' : 'k';
+    o += `<span class="t${c}">${esc(m[0])}</span>`;
+    i = re.lastIndex;
+    if (!m[0]) re.lastIndex++;
+  }
+  return o + esc(code.slice(i));
+}
+const codeBlock = (lang, c) => {
+  const code = c.replace(/\n$/, '');
+  return `<div class="code"><div class="ch"><span>${esc(lang || 'code')}</span><span class="cs"><button data-copy>${ic('copy', 14)} Salin</button><button data-dl="${esc(lang)}">${ic('dl', 14)} Unduh</button></span></div><pre><code>${hl(code, lang)}</code></pre></div>`;
+};
+
+/* ---------- Markdown ---------- */
+function md(src) {
+  const blocks = [];
+  const raw = src.replace(/```(\w*)[^\n]*\n([\s\S]*?)(```|$)/g, (m, l, c) => { blocks.push(codeBlock(l, c)); return `\u0000${blocks.length - 1}\u0000`; });
+  const s = esc(raw);
+  const il = t => t
+    .replace(/`([^`]+)`/g, '<code>$1</code>')
+    .replace(/\*\*([^*]+)\*\*/g, '<b>$1</b>')
+    .replace(/(^|[^*])\*([^*\s][^*]*)\*/g, '$1<i>$2</i>')
+    .replace(/\[([^\]]+)\]\((https?:[^)\s]+)\)/g, '<a href="$2" target="_blank" rel="noopener">$1</a>');
+  const L = s.split('\n');
+  let o = '', list = null, p = [], m;
+  const fp = () => { if (p.length) { o += '<p>' + il(p.join('<br>')) + '</p>'; p = []; } };
+  const cl = () => { if (list) { o += `</${list}>`; list = null; } };
+  const isRow = l => /^\s*\|.*\|\s*$/.test(l);
+  for (let i = 0; i < L.length; i++) {
+    const l = L[i];
+    if (/^\u0000\d+\u0000$/.test(l.trim())) { fp(); cl(); o += blocks[+l.trim().replace(/\u0000/g, '')]; }
+    else if (isRow(l)) {
+      fp(); cl();
+      const rows = [];
+      while (i < L.length && isRow(L[i])) rows.push(L[i++]);
+      i--;
+      const cells = r => r.trim().replace(/^\||\|$/g, '').split('|').map(c => il(c.trim()));
+      const sep = rows[1] && /^[\s|:-]+$/.test(rows[1]);
+      o += '<div class="tw"><table>' + (sep ? '<tr>' + cells(rows[0]).map(c => `<th>${c}</th>`).join('') + '</tr>' : '') +
+        rows.slice(sep ? 2 : 0).map(r => '<tr>' + cells(r).map(c => `<td>${c}</td>`).join('') + '</tr>').join('') + '</table></div>';
+    }
+    else if (m = l.match(/^(#{1,4})\s+(.*)/)) { fp(); cl(); const n = Math.min(m[1].length + 1, 5); o += `<h${n}>${il(m[2])}</h${n}>`; }
+    else if (m = l.match(/^\s*[-*]\s+(.*)/)) { fp(); if (list !== 'ul') { cl(); o += '<ul>'; list = 'ul'; } o += '<li>' + il(m[1]) + '</li>'; }
+    else if (m = l.match(/^\s*\d+[.)]\s+(.*)/)) { fp(); if (list !== 'ol') { cl(); o += '<ol>'; list = 'ol'; } o += '<li>' + il(m[1]) + '</li>'; }
+    else if (/^&gt;\s?/.test(l)) { fp(); cl(); o += '<blockquote>' + il(l.replace(/^&gt;\s?/, '')) + '</blockquote>'; }
+    else if (/^---+$/.test(l.trim())) { fp(); cl(); o += '<hr>'; }
+    else if (!l.trim()) { fp(); cl(); }
+    else { cl(); p.push(l); }
+  }
+  fp(); cl();
+  return o.replace(/\u0000(\d+)\u0000/g, (x, i) => blocks[i]);
+}
+
+/* ---------- Provider & request ---------- */
+const trim = u => u.replace(/\/+$/, '');
+function chatUrl(p) {
+  const t = p.type === 'anthropic' ? '/messages' : '/chat/completions';
+  const u = trim(p.url);
+  return u.endsWith(t) ? u : u + t;
+}
+const modelsUrl = p => trim(p.url).replace(/\/(messages|chat\/completions)$/, '') + '/models';
+function modelList(p) {
+  const pre = PRESETS.find(x => trim(x.url) === trim(p.url || ''));
+  return [...new Set([...(p.models || []), ...(pre ? pre.models : []), p.model].filter(Boolean))];
+}
+function relay(p, url, init = {}) {
+  const h = { 'x-target-url': url, 'x-target-key': p.key || '', 'x-target-auth': p.type === 'anthropic' ? 'x-api-key' : 'bearer', ...(init.headers || {}) };
+  if (p.type === 'anthropic') h['anthropic-version'] = '2023-06-01';
+  return fetch(trim(cfg.proxy) + '/relay', { ...init, headers: h });
+}
+function toMsgs(msgs, type) {
+  const out = [];
+  for (const m of msgs) {
+    if (m.role === 'assistant') { if (m.text) out.push({ role: 'assistant', content: m.text }); continue; }
+    const parts = [];
+    for (const a of m.atts || []) {
+      if (!a.data) parts.push(T(`[Lampiran "${a.name}" tidak tersedia lagi]`));
+      else if (a.kind === 'image') parts.push(type === 'anthropic'
+        ? { type: 'image', source: { type: 'base64', media_type: a.mime, data: a.data } }
+        : { type: 'image_url', image_url: { url: `data:${a.mime};base64,${a.data}` } });
+      else if (a.kind === 'pdf') parts.push(type === 'anthropic'
+        ? { type: 'document', source: { type: 'base64', media_type: 'application/pdf', data: a.data } }
+        : T(`[PDF "${a.name}" dilewati: tipe OpenAI tidak mendukung PDF]`));
+      else parts.push(T(`<file name="${a.name}">\n${a.data}\n</file>`));
+    }
+    parts.push(T(m.text || '(lihat lampiran)'));
+    out.push({ role: 'user', content: parts.every(x => x.type === 'text') ? parts.map(x => x.text).join('\n\n') : parts });
+  }
+  return out;
+}
+function buildBody(p, msgs, stream, max, extra) {
+  const base = { model: p.model, max_tokens: max || +cfg.max || 8192, stream };
+  if (cfg.temp !== '' && cfg.temp != null) base.temperature = +cfg.temp;
+  const m = toMsgs(msgs, p.type);
+  const sys = extra ? cfg.system + '\n\n' + extra : cfg.system;
+  if (p.type === 'anthropic') return { ...base, system: sys, messages: m };
+  return { ...base, messages: [{ role: 'system', content: sys }, ...m] };
+}
+function parseFull(d, type, am) {
+  if (d.error) throw new Error(d.error.message || JSON.stringify(d.error));
+  if (type === 'anthropic') {
+    for (const b of d.content || []) { if (b.type === 'text') am.text += b.text; else if (b.type === 'thinking') am.think += b.thinking; }
+    if (d.usage) { am.in = d.usage.input_tokens; am.out = d.usage.output_tokens; }
+  } else {
+    const m = d.choices?.[0]?.message || {};
+    am.text += m.content || '';
+    am.think += m.reasoning_content || m.reasoning || '';
+    if (d.usage) { am.in = d.usage.prompt_tokens; am.out = d.usage.completion_tokens; }
+  }
+}
+async function readSSE(r, type, am, tick) {
+  const rd = r.body.getReader(), dec = new TextDecoder();
+  let buf = '';
+  for (;;) {
+    const { done, value } = await rd.read();
+    if (done) break;
+    buf += dec.decode(value, { stream: true });
+    let i;
+    while ((i = buf.indexOf('\n')) >= 0) {
+      const l = buf.slice(0, i).trim();
+      buf = buf.slice(i + 1);
+      if (!l.startsWith('data:')) continue;
+      const d = l.slice(5).trim();
+      if (!d || d === '[DONE]') continue;
+      let j;
+      try { j = JSON.parse(d); } catch { continue; }
+      if (type === 'anthropic') {
+        if (j.type === 'content_block_delta') {
+          const x = j.delta || {};
+          if (x.type === 'text_delta') am.text += x.text;
+          else if (x.type === 'thinking_delta') am.think += x.thinking;
+        }
+        else if (j.type === 'message_start' && j.message?.usage) am.in = j.message.usage.input_tokens;
+        else if (j.type === 'message_delta' && j.usage) am.out = j.usage.output_tokens;
+        else if (j.type === 'error') throw new Error(j.error?.message || 'Stream error');
+      } else {
+        if (j.error) throw new Error(j.error.message || JSON.stringify(j.error));
+        const x = j.choices?.[0]?.delta || {};
+        if (x.content) am.text += x.content;
+        const th = x.reasoning_content || x.reasoning;
+        if (th) am.think += th;
+        if (j.usage) { am.in = j.usage.prompt_tokens; am.out = j.usage.completion_tokens; }
+      }
+      tick();
+    }
+  }
+}
+const hint = st => st === 401 || st === 403 ? '\nCek API key di menu API & Model.' : st === 404 ? '\nCek Base URL dan tipe (Anthropic / OpenAI).' : st === 429 ? '\nKuota atau batas request habis.' : '';
+
+/* ---------- Lampiran ---------- */
+async function shrink(f) {
+  const b = await createImageBitmap(f), k = Math.min(1, 1568 / Math.max(b.width, b.height));
+  const c = document.createElement('canvas');
+  c.width = Math.round(b.width * k); c.height = Math.round(b.height * k);
+  const x = c.getContext('2d');
+  x.fillStyle = '#fff'; x.fillRect(0, 0, c.width, c.height);
+  x.drawImage(b, 0, 0, c.width, c.height);
+  return c.toDataURL('image/jpeg', .85).split(',')[1];
+}
+const b64 = f => new Promise((ok, no) => { const r = new FileReader(); r.onload = () => ok(r.result.split(',')[1]); r.onerror = no; r.readAsDataURL(f); });
+async function addFiles(files) {
+  for (const f of files) {
+    if (pending.length >= 6) { toast('Maksimal 6 lampiran per pesan.'); break; }
+    try {
+      if (f.type.startsWith('image/')) pending.push({ name: f.name || 'gambar.jpg', kind: 'image', mime: 'image/jpeg', data: await shrink(f) });
+      else if (f.size > 12e6) toast(f.name + ' terlalu besar (maks 12 MB).');
+      else if (f.type === 'application/pdf' || /\.pdf$/i.test(f.name)) pending.push({ name: f.name, kind: 'pdf', mime: 'application/pdf', data: await b64(f) });
+      else {
+        const t = await f.text();
+        if (t.includes('\u0000')) { toast(f.name + ': format file tidak didukung.'); continue; }
+        pending.push({ name: f.name, kind: 'text', data: t.slice(0, 200000) });
+      }
+    } catch { toast('Gagal membaca ' + f.name); }
+  }
+  renderPend();
+}
+function attChip(a, ref, removeIdx) {
+  const body = a.kind === 'image' && a.data
+    ? `<img src="data:${a.mime};base64,${a.data}" alt="${esc(a.name)}">`
+    : `${ic('file', 15)}<span>${esc(a.name)}</span>`;
+  return `<div class="chip"><button class="cn" data-vm="${ref}">${body}</button>${removeIdx !== undefined ? `<button data-rm="${removeIdx}" aria-label="Hapus lampiran">${ic('x', 14)}</button>` : ''}</div>`;
+}
+function renderPend() { $('pend').innerHTML = pending.map((a, i) => attChip(a, 'p' + i, i)).join(''); }
+function viewAtt(ref) {
+  const a = ref[0] === 'p' ? pending[+ref.slice(1)] : (([m, j]) => cur().msgs[+m].atts[+j])(ref.split('.'));
+  if (!a) return;
+  $('dv-t').textContent = a.name;
+  $('dv-b').innerHTML = a.kind === 'image' && a.data ? `<img src="data:${a.mime};base64,${a.data}" alt="">`
+    : a.kind === 'text' ? `<pre>${esc(a.data)}</pre>` : '<div class="note">Pratinjau tidak tersedia untuk file ini.</div>';
+  $('dv').showModal();
+}
+
+const GRP = ts => {
+  if (!ts) return 'Sebelumnya';
+  const d0 = new Date(); d0.setHours(0, 0, 0, 0);
+  const day = 864e5, diff = d0.getTime() - ts;
+  if (ts >= d0.getTime()) return 'Hari ini';
+  if (diff <= day) return 'Kemarin';
+  if (diff <= 7 * day) return '7 hari terakhir';
+  if (diff <= 30 * day) return '30 hari terakhir';
+  return 'Lebih lama';
+};
+function renderList() {
+  const q = filter.toLowerCase();
+  const rows = sessions
+    .filter(s => !q || s.title.toLowerCase().includes(q) || s.msgs.some(m => (m.text || '').toLowerCase().includes(q)))
+    .sort((a, b) => (b.ts || 0) - (a.ts || 0));
+  let last = '';
+  $('list').innerHTML = rows.length
+    ? rows.map(s => {
+        const g = GRP(s.ts), head = g !== last ? `<div class="gl">${g}</div>` : '';
+        last = g;
+        return head + `<div class="item ${s.id === curId ? 'on' : ''}" data-id="${s.id}"><span>${esc(s.title)}</span><div class="ia"><button class="x" data-ren="${s.id}" title="Ganti nama" aria-label="Ganti nama chat">${ic('edit', 13)}</button><button class="x" data-del="${s.id}" title="Hapus chat" aria-label="Hapus chat">${ic('x', 14)}</button></div></div>`;
+      }).join('')
+    : '<div class="lbl">Tidak ada chat</div>';
+}
+function renderHead() {
+  const p = prov();
+  $('pk-t').textContent = p ? `${p.name} · ${p.model || 'pilih model'}` : 'Pilih API';
+}
+function renderMenu() {
+  const cp = prov();
+  const body = provs.length ? provs.map(p => `<div class="mh">${esc(p.name)}</div>` + (modelList(p).slice(0, 12).map(m => {
+    const on = cp && p.id === cp.id && p.model === m;
+    return `<button class="${on ? 'on' : ''}" data-pp="${p.id}" data-pmod="${esc(m)}"><span>${esc(m)}</span>${on ? ic('check', 14) : ''}</button>`;
+  }).join('') || `<button data-manage="${p.id}"><span>Belum ada model, klik untuk atur</span></button>`)).join('')
+    : '<div class="mh">Belum ada API. Tambahkan dulu.</div>';
+  $('pkm').innerHTML = body + '<hr>' + (cp ? '<input id="pk-in" placeholder="Model lain: ketik lalu Enter" autocomplete="off">' : '') +
+    `<button data-manage="">${ic('server', 15)} <span style="flex:1;margin-left:8px">Kelola API & model…</span></button>`;
+}
+const closeMenu = () => $('pkm').classList.remove('show');
+function aHtml(m, streaming) {
+  const orc = m.orchestra ? orcHtml(m.orchestra) : '';
+  const vid = m.video ? vidHtml(m.video) : '';
+  const think = m.think ? `<details class="think" ${streaming && !m.text ? 'open' : ''}><summary>Proses berpikir</summary><div>${esc(m.think)}</div></details>` : '';
+  const body = m.text ? md(m.text) : (!m.think && !m.orchestra && !m.video && streaming ? '<div class="dots"><span></span><span></span><span></span></div>' : '');
+  const anim = m.media === 'animation' && !streaming && m.text ? animHtml(m.text) : '';
+  return orc + vid + think + body + anim;
+}
+function render() {
+  const s = cur(), c = $('chat');
+  $('ttl').textContent = s.title;
+  document.title = s.msgs.length ? s.title + ' · Jaki' : 'Jaki Agent';
+  if (!s.msgs.length) {
+c.innerHTML = '<div class="empty"><b>' + ic('logo', 52) + '</b><h1>Ada yang bisa Jaki bantu hari ini?</h1><p>Kirim pertanyaan, gambar, atau file kode.</p><div class="sug">' +
+      IDEAS.map(t => `<button data-idea="${esc(t)}">${esc(t)}</button>`).join('') + '</div></div>';
+  } else {
+    const last = s.msgs.length - 1;
+    c.innerHTML = s.msgs.map((m, i) => {
+      if (m.role === 'user') {
+        const atts = (m.atts || []).length ? '<div class="atts">' + m.atts.map((a, j) => attChip(a, i + '.' + j)).join('') + '</div>' : '';
+        const long = (m.text || '').length > 700 || (m.text || '').split('\n').length > 12;
+        return `<div class="m u">${atts}${m.text ? `<div class="ub ${long ? 'long' : ''}">${esc(m.text)}</div>` : ''}` +
+          (busy ? '' : `<div class="act">${long ? '<button data-more>Tampilkan semua</button>' : ''}<button data-edit="${i}">${ic('edit', 14)} Edit</button></div>`) + '</div>';
+      }
+      const streaming = busy && i === last;
+      return `<div class="m"><div class="a">${aHtml(m, streaming)}</div>` + (streaming ? '' :
+        `<div class="act"><button data-msg="${i}">${ic('copy', 14)} Salin</button>${i === last ? `<button data-regen>${ic('redo', 14)} Ulangi</button>` : ''}${m.out ? `<small>${m.in || '?'} masuk · ${m.out} keluar</small>` : ''}</div>`) + '</div>';
+    }).join('');
+  }
+  if (errMsg) c.insertAdjacentHTML('beforeend', `<div class="m"><div class="err">${esc(errMsg)}<button data-retry>Coba lagi</button></div></div>`);
+  $('scroll').scrollTop = $('scroll').scrollHeight;
+  $('go').innerHTML = ic(busy ? 'stop' : 'send', 18);
+  $('go').title = busy ? 'Hentikan' : 'Kirim';
+}
+
+/* ---------- Kirim ---------- */
+const stop = () => ctrl && ctrl.abort();
+async function send(retry) {
+  if (busy) return stop();
+    if (!retry && /^\/html\b/i.test($('in').value.trim())) {
+    const s0 = cur();
+    const raw0 = ($('in').value.trim().replace(/^\/html\s*/i, '') + '\n' + pending.filter(a => a.kind === 'text').map(a => a.data).join('\n')).trim();
+    if (!raw0) return toast('Tempel kode HTML setelah /html.');
+    const fc = raw0.match(/```(?:html|svg)[^\n]*\n([\s\S]*?)```/i);
+    const html0 = fc ? fc[1] : raw0;
+    if (!s0.msgs.length) s0.title = 'Animasi HTML';
+    s0.msgs.push({ role: 'user', text: '/html (kode ' + html0.split('\n').length + ' baris)', atts: [] });
+    s0.msgs.push({ role: 'assistant', text: '```html\n' + html0 + '\n```', think: '', media: 'animation' });
+    cur().ts = Date.now(); pending = []; $('in').value = ''; fit(); renderPend(); renderList(); save(); render();
+    return;
+  }
+    if (orcOn()) return sendOrc(retry);
+  const p = prov();
+  if (!p || !p.url || !p.model) { toast('Lengkapi API dan model dulu.'); openProv(); return; }
+  const s = cur();
+  errMsg = '';
+  if (!retry) {
+    const t = $('in').value.trim();
+    if (!t && !pending.length) return;
+    if (!s.msgs.length) s.title = (t || pending[0].name).slice(0, 40);
+    s.msgs.push({ role: 'user', text: t, atts: pending });
+    cur().ts = Date.now(); pending = []; $('in').value = ''; fit(); renderPend(); renderList(); save();
+  }
+  const mx = await mediaPre(p, s);
+  if (mx.done) return;
+  const mem = (await Mem.recall(s.msgs)) + mx.extra;
+  const body = buildBody(p, s.msgs, true, undefined, mem);
+  const am = { role: 'assistant', text: '', think: '', ...mx.flag };
+  s.msgs.push(am);
+  busy = true; ctrl = new AbortController(); render();
+  const el = $('chat').querySelector('.m:last-child .a');
+  let raf = 0;
+  const tick = () => {
+    if (raf) return;
+    raf = requestAnimationFrame(() => {
+      raf = 0;
+      const sc = $('scroll'), near = sc.scrollHeight - sc.scrollTop - sc.clientHeight < 120;
+      el.innerHTML = aHtml(am, true);
+      if (near) sc.scrollTop = sc.scrollHeight;
+    });
+  };
+  try {
+    const r = await relay(p, chatUrl(p), { method: 'POST', signal: ctrl.signal, headers: { 'content-type': 'application/json' }, body: JSON.stringify(body) });
+    if (!r.ok) throw new Error(`HTTP ${r.status}: ${(await r.text()).slice(0, 500)}${hint(r.status)}`);
+    if ((r.headers.get('content-type') || '').includes('event-stream')) await readSSE(r, p.type, am, tick);
+    else parseFull(await r.json(), p.type, am);
+  } catch (e) {
+    if (e.name !== 'AbortError') errMsg = e instanceof TypeError
+      ? `Tidak bisa terhubung ke proxy (${cfg.proxy}).\nJalankan "node proxy.js" lalu coba lagi.`
+      : e.message;
+  }
+  busy = false;
+  if (!am.text && !am.think) s.msgs.pop();
+  save(); renderList(); render();
+  if (am.text && !errMsg) Mem.learn(p, s.msgs);
+}
+
+/* ---------- Orchestra: mode, dialog, progress (logika agent ada di orchestra.js) ---------- */
+const ORC_ST = { pending: 'menunggu', running: 'berjalan', done: 'selesai', failed: 'gagal' };
+const ORC_PH = { planning: 'Supervisor menyusun rencana…', working: 'Agent worker bekerja…', writing: 'Writer menyusun jawaban akhir…', stopped: 'Dihentikan sebelum selesai.', error: 'Berhenti karena error.' };
+const orcOpen = new Set(); // <details> output yang sedang dibuka, supaya tidak menutup sendiri saat streaming
+const orcOn = () => typeof Orchestra !== 'undefined' && Orchestra.getCfg().mode === 'orchestra';
+function orcHtml(o) {
+  const rows = (o.steps || []).map(s => {
+    const key = o.rid + ':' + s.id, nm = esc(s.label || s.agent);
+    const dep = (s.depends_on || []).length ? ' · setelah ' + esc(s.depends_on.join(', ')) : '';
+    return `<div class="orc-s"><div class="orc-r"><b>${esc(s.id)} · ${nm}</b><span class="orc-b ${esc(s.status)}">${ORC_ST[s.status] || esc(s.status)}</span></div>` +
+      `<div class="orc-m">${esc(s.model || '')}${dep}</div><div class="orc-i" title="${esc(s.instruction)}">${esc(s.instruction)}</div>` +
+      (s.output ? `<details data-ok="${esc(key)}" ${orcOpen.has(key) ? 'open' : ''}><summary>Output ${nm}</summary><div class="orc-o">${md(s.output)}</div></details>` : '') +
+      (s.error ? `<div class="orc-e">${esc(s.error)}</div>` : '') + '</div>';
+  }).join('');
+  return '<div class="orc"><div class="orc-h">Orchestra</div>' +
+    (o.supervisor ? `<div class="orc-m">Supervisor: ${esc(o.supervisor)} · Writer: ${esc(o.writer)}</div>` : '') +
+    (o.summary ? `<div class="orc-sm">Rencana: ${esc(o.summary)}</div>` : '') + rows +
+    (ORC_PH[o.phase] ? `<div class="orc-ph">${ORC_PH[o.phase]}</div>` : '') + '</div>';
+}
+function streamTick(el, am) {
+  let raf = 0;
+  return () => {
+    if (raf) return;
+    raf = requestAnimationFrame(() => {
+      raf = 0;
+      const sc = $('scroll'), near = sc.scrollHeight - sc.scrollTop - sc.clientHeight < 120;
+      el.innerHTML = aHtml(am, true);
+      if (near) sc.scrollTop = sc.scrollHeight;
+    });
+  };
+}
+async function sendOrc(retry) {
+  const bad = Orchestra.problems(Orchestra.getCfg());
+  if (bad.length) { toast('Konfigurasi Orchestra belum lengkap.'); return orcOpenDlg(bad.join('\n')); }
+  const s = cur();
+  errMsg = '';
+  if (!retry) {
+    const t = $('in').value.trim();
+    if (!t && !pending.length) return;
+    if (!s.msgs.length) s.title = (t || pending[0].name).slice(0, 40);
+    s.msgs.push({ role: 'user', text: t, atts: pending });
+    cur().ts = Date.now(); pending = []; $('in').value = ''; fit(); renderPend(); renderList(); save();
+  }
+  const mem = await Mem.recall(s.msgs);
+  const am = { role: 'assistant', text: '', think: '' };
+  s.msgs.push(am);
+  busy = true; ctrl = new AbortController(); render();
+  const tick = streamTick($('chat').querySelector('.m:last-child .a'), am);
+  try {
+    await Orchestra.run({ msgs: s.msgs.slice(0, -1), am, signal: ctrl.signal, memory: mem, onUpdate: tick });
+  } catch (e) {
+    if (e.name !== 'AbortError') errMsg = e.message;
+  }
+  busy = false;
+  if (!am.text) s.msgs.pop();
+  save(); renderList(); render();
+  if (am.text && !errMsg) { try { Mem.learn(Orchestra.provider('writer'), s.msgs); } catch { /* memori best-effort */ } }
+}
+function renderMode() {
+  const m = Orchestra.getCfg().mode;
+  document.querySelectorAll('#mode [data-om]').forEach(b => { const on = b.dataset.om === m; b.classList.toggle('on', on); b.setAttribute('aria-pressed', on); });
+  $('in').placeholder = m === 'orchestra' ? 'Mode Orchestra: beberapa agent mengerjakan permintaanmu' : 'Tanya apa saja, atau tempel gambar di sini';
+}
+const orcMsg = (t, c) => { $('o-msg').textContent = t || ''; $('o-msg').className = 'note ' + (c || ''); };
+function orcDlg() {
+  const c = Orchestra.getCfg();
+  $('o-body').innerHTML = provs.length ? Orchestra.ORDER.map(k => {
+    const a = c.agents[k], p = provs.find(x => x.id === a.provider), worker = Orchestra.WORKERS.includes(k);
+    const opts = '<option value="">— pilih provider —</option>' + provs.map(x => `<option value="${esc(x.id)}" ${x.id === a.provider ? 'selected' : ''}>${esc(x.name)}</option>`).join('');
+    const dl = p ? modelList(p).map(m => `<option value="${esc(m)}">`).join('') : '';
+    return `<fieldset class="ag" data-ag="${k}"><legend>${esc(Orchestra.LABELS[k])}</legend><div class="ag-d">${esc(Orchestra.DESC[k])}</div>` +
+      (worker ? `<label class="ag-on"><input type="checkbox" data-f="enabled" style="width:auto" ${a.enabled ? 'checked' : ''}> Aktif</label>` : '') +
+      `<label>Provider</label><select data-f="provider">${opts}</select>` +
+      `<label>Model (pilih dari saran atau ketik manual)</label><input data-f="model" list="o-dl-${k}" value="${esc(a.model)}" autocomplete="off"><datalist id="o-dl-${k}">${dl}</datalist>` +
+      `<label>System prompt</label><textarea data-f="system" rows="5">${esc(a.system)}</textarea></fieldset>`;
+  }).join('') : '<div class="note bad">Belum ada API. Tambahkan dulu di menu API & Model.</div>';
+}
+function orcOpenDlg(msg) { orcDlg(); orcMsg(msg, 'bad'); $('do').showModal(); }
+function orcSave() {
+  const agents = {};
+  $('o-body').querySelectorAll('[data-ag]').forEach(fs => {
+    const g = f => fs.querySelector(`[data-f="${f}"]`);
+    agents[fs.dataset.ag] = { provider: g('provider').value, model: g('model').value.trim(), system: g('system').value.trim(), enabled: g('enabled') ? g('enabled').checked : true };
+  });
+  if (!Object.keys(agents).length) return orcMsg('Belum ada API. Tambahkan dulu di menu API & Model.', 'bad');
+  const bad = Orchestra.problems({ agents });
+  if (bad.length) return orcMsg(bad.join('\n'), 'bad');
+  if (!Orchestra.saveCfg(agents)) return orcMsg('Gagal menyimpan: penyimpanan browser penuh.', 'bad');
+  $('do').close(); toast('Konfigurasi Orchestra disimpan.');
+}
+function orcInit() { // dipanggil setelah orchestra.js dimuat
+  if (typeof Orchestra === 'undefined') { $('mode').style.display = 'none'; $('bo').style.display = 'none'; return; }
+  renderMode();
+  $('mode').onclick = e => {
+    const b = e.target.closest('[data-om]');
+    if (!b) return;
+    if (busy) return toast('Tunggu proses selesai dulu.');
+    Orchestra.setMode(b.dataset.om); renderMode();
+  };
+  $('bo').onclick = () => orcOpenDlg('');
+  $('o-body').addEventListener('change', e => {
+    const t = e.target;
+    if (t.dataset.f !== 'provider') return;
+    const fs = t.closest('[data-ag]'), p = provs.find(x => x.id === t.value);
+    fs.querySelector('datalist').innerHTML = p ? modelList(p).map(m => `<option value="${esc(m)}">`).join('') : '';
+    fs.querySelector('[data-f="model"]').value = p ? p.model || '' : '';
+  });
+  $('o-save').onclick = orcSave;
+  $('o-reset').onclick = e => {
+    const b = e.target;
+    if (!b.dataset.arm) { b.dataset.arm = 1; b.textContent = 'Yakin? Klik lagi'; setTimeout(() => { delete b.dataset.arm; b.textContent = 'Reset ke default'; }, 3000); return; }
+    delete b.dataset.arm; b.textContent = 'Reset ke default';
+    Orchestra.resetCfg(); orcDlg(); orcMsg('Dikembalikan ke default (semua agent memakai provider pertama).', 'good');
+  };
+  document.addEventListener('toggle', e => {
+    const d = e.target;
+    if (d.dataset && d.dataset.ok) d.open ? orcOpen.add(d.dataset.ok) : orcOpen.delete(d.dataset.ok);
+  }, true);
+}
+
+/* ---------- Media: video & animasi otomatis (logika router/video ada di media.js) ---------- */
+const ANIM_CSP = `<meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'unsafe-inline'; style-src 'unsafe-inline'; img-src data: blob:; media-src data: blob:; font-src data:">`;
+function vidHtml(v) {
+  if (v.state === 'done' && /^https?:\/\//i.test(v.url || '')) {
+    const meta = esc([v.model, v.duration ? v.duration + ' dtk' : '', v.resolution].filter(Boolean).join(' · '));
+    return `<div class="vid"><video controls playsinline preload="metadata" src="${esc(v.url)}"></video>` +
+      `<div class="vid-m">${meta} · <a href="${esc(v.url)}" target="_blank" rel="noopener">Buka / unduh</a> · <button data-vref="${esc(v.file_id)}">Muat ulang tautan</button></div></div>`;
+  }
+  return `<div class="vid"><div class="vid-m">${esc(v.note || 'Membuat video…')}</div></div>`;
+}
+// Pratinjau animasi: iframe sandbox tanpa allow-same-origin (tidak bisa membaca localStorage/API key) + CSP yang memblokir jaringan.
+function animHtml(text) {
+  const m = String(text).match(/```(?:html|svg)[^\n]*\n([\s\S]*?)```/i);
+  if (!m || m[1].indexOf('<') < 0) return '';
+  let h = m[1];
+  if (/^\s*<svg/i.test(h)) h = '<!doctype html><html><head><meta charset="utf-8"><\/head><body style="margin:0;display:grid;place-items:center;height:100vh;background:#fff">' + h + '<\/body><\/html>';
+  if (/<head(\s[^>]*)?>/i.test(h)) h = h.replace(/<head(\s[^>]*)?>/i, x => x + ANIM_CSP);
+  else if (/<html(\s[^>]*)?>/i.test(h)) h = h.replace(/<html(\s[^>]*)?>/i, x => x + '<head>' + ANIM_CSP + '</head>');
+  else h = ANIM_CSP + h;
+  return `<div class="anim"><div class="anim-h"><span>Pratinjau animasi</span><button data-arep>${ic('redo', 14)} Ulangi</button></div>` +
+    `<iframe sandbox="allow-scripts" referrerpolicy="no-referrer" title="Pratinjau animasi" srcdoc="${esc(h)}"></iframe></div>`;
+}
+// Dipanggil send() sebelum permintaan chat. Mengembalikan { done } jika Media mengambil alih, atau { extra, flag } untuk chat biasa.
+async function mediaPre(p, s) {
+  const none = { extra: '', flag: {} };
+  if (typeof Media === 'undefined') return none;
+  const last = s.msgs[s.msgs.length - 1];
+  if (!last || last.role !== 'user') return none;
+  const t = (last.text || '').trim(), c = Media.getCfg(), cmd = Media.command(t);
+  if (cmd && cmd.mode === 'chat') return none;
+  if (!cmd && !(c.auto && !(last.atts || []).length && Media.looksMedia(t))) return none;
+  busy = true; ctrl = new AbortController(); render(); // tahan input selama router berjalan
+  let rt;
+  try {
+    rt = cmd && cmd.mode === 'animation' ? { mode: 'animation' } : await Media.route(p, s.msgs, ctrl.signal, cmd ? cmd.mode : '', cmd ? cmd.text : '');
+  } catch (e) {
+    if (!ctrl.signal.aborted) {
+      if (cmd) rt = { mode: cmd.mode, prompt: cmd.text, duration: 6 };
+      else { toast('Router media gagal, dijawab sebagai chat biasa. ' + e.message.slice(0, 80)); rt = { mode: 'chat' }; }
+    }
+  }
+  if (ctrl.signal.aborted) { busy = false; render(); return { done: true }; }
+  if (rt.mode === 'animation') return { extra: '\n' + Media.ANIM_PROMPT, flag: { media: 'animation' } };
+  if (rt.mode === 'video') {
+    if (!cmd && c.confirm && !confirm(`Buat video dengan ${c.model}?\n\nPrompt:\n${rt.prompt}\n\nIni memakai kuota/biaya API MiniMax. Batal = dijawab sebagai chat biasa.`)) return none;
+    await mediaVideo(s, rt);
+    return { done: true };
+  }
+  return none;
+}
+async function mediaVideo(s, rt) {
+  const am = { role: 'assistant', text: '', think: '', media: 'video', video: { state: 'running', note: 'Menyiapkan…', prompt: rt.prompt, duration: rt.duration, url: '', file_id: '' } };
+  s.msgs.push(am);
+  busy = true; ctrl = new AbortController(); render();
+  const tick = streamTick($('chat').querySelector('.m:last-child .a'), am);
+  try {
+    const v = await Media.video({ prompt: rt.prompt, duration: rt.duration, signal: ctrl.signal, onNote: n => { am.video.note = n; tick(); } });
+    Object.assign(am.video, v, { state: 'done', note: '' });
+    am.text = `Video selesai dibuat (${v.model}, ${v.duration} dtk, ${v.resolution}).\n\nPrompt: ${v.prompt}`;
+  } catch (e) {
+    if (e.name !== 'AbortError') errMsg = e.message;
+  }
+  busy = false;
+  if (!am.text) s.msgs.pop(); // gagal atau dihentikan: jangan simpan pesan kosong (task yang sudah terkirim tetap diproses MiniMax)
+  save(); renderList(); render();
+}
+function mediaDlg() {
+  const c = Media.getCfg();
+  $('md-auto').checked = c.auto; $('md-conf').checked = c.confirm;
+  $('md-prov').innerHTML = '<option value="">Otomatis (cari provider MiniMax)</option>' +
+    provs.map(x => `<option value="${esc(x.id)}" ${x.id === c.provider ? 'selected' : ''}>${esc(x.name)}</option>`).join('');
+  $('md-model').value = c.model; $('md-res').value = c.resolution; $('md-msg').textContent = '';
+}
+function mediaInit() { // dipanggil setelah media.js dimuat
+  if (typeof Media === 'undefined') { $('bd').style.display = 'none'; return; }
+  $('bd').onclick = () => { mediaDlg(); $('dmd').showModal(); };
+  $('md-save').onclick = () => {
+    const ok = Media.setCfg({ auto: $('md-auto').checked, confirm: $('md-conf').checked, provider: $('md-prov').value, model: $('md-model').value.trim() || 'MiniMax-Hailuo-2.3', resolution: $('md-res').value });
+    if (!ok) { $('md-msg').textContent = 'Gagal menyimpan: penyimpanan browser penuh.'; $('md-msg').className = 'note bad'; return; }
+    $('dmd').close(); toast('Pengaturan Media disimpan.');
+  };
+  document.addEventListener('click', async e => {
+    const ar = e.target.closest('[data-arep]');
+    if (ar) { const f = ar.closest('.anim').querySelector('iframe'); f.replaceWith(f.cloneNode()); return; } // muat ulang animasi
+    const b = e.target.closest('[data-vref]');
+    if (!b) return;
+    const m = cur().msgs.find(x => x.video && x.video.file_id === b.dataset.vref);
+    if (!m) return;
+    b.textContent = 'Memuat…';
+    try { m.video.url = await Media.refreshUrl(m.video.file_id); save(); render(); toast('Tautan video diperbarui.'); }
+    catch (er) { b.textContent = 'Muat ulang tautan'; toast(er.message.slice(0, 120)); }
+  });
+}
+
+/* ---------- Chat & sidebar ---------- */
+function toggleSide(force) {
+  if (mob()) { const o = $('side').classList.toggle('open', force); $('bk').classList.toggle('show', o); }
+  else { document.body.classList.toggle('sbc', force === undefined ? undefined : !force); localStorage.setItem(K.sb, document.body.classList.contains('sbc') ? '1' : ''); }
+}
+function newChat() {
+  const first = sessions[0];
+  if (first && !first.msgs.length) curId = first.id;
+  else { const s = { id: uid(), title: 'Chat baru', ts: Date.now(), msgs: [] }; sessions.unshift(s); curId = s.id; }
+  errMsg = ''; pending = []; renderPend(); save(); renderList(); render();
+  if (mob()) toggleSide(false);
+  $('in').focus();
+}
+function delChat(id) {
+  sessions = sessions.filter(s => s.id !== id);
+  if (!sessions.length) return newChat();
+  if (curId === id) curId = sessions[0].id;
+  save(); renderList(); render();
+}
+function exportChat() {
+  const s = cur();
+  const txt = `# ${s.title}\n\n` + s.msgs.map(m => `**${m.role === 'user' ? 'Kamu' : 'Jaki'}:**\n\n${m.text}\n`).join('\n---\n\n');
+  const a = document.createElement('a');
+  a.href = URL.createObjectURL(new Blob([txt], { type: 'text/markdown' }));
+  a.download = (s.title.replace(/[^\w\- ]+/g, '').trim() || 'chat') + '.md';
+  a.click(); URL.revokeObjectURL(a.href);
+}
+const fit = () => { const e = $('in'); e.style.height = 'auto'; e.style.height = Math.min(e.scrollHeight, 200) + 'px'; };
+async function ping() {
+  try { const r = await fetch(trim(cfg.proxy) + '/ping'); $('dot').classList.toggle('ok', r.ok); $('dot').title = r.ok ? 'Proxy aktif' : 'Proxy bermasalah'; }
+  catch { $('dot').classList.remove('ok'); $('dot').title = 'Proxy mati. Jalankan: node proxy.js'; }
+}
+
+
+
+/* ---------- Dialog API & Model ---------- */
+function combo(input, dd, items, pick) {
+  const show = () => {
+    const q = input.value.trim().toLowerCase(), all = items();
+    const exact = all.some(x => x.label.toLowerCase() === q);
+    const list = all.filter(x => !q || exact || x.label.toLowerCase().includes(q));
+    dd._l = list;
+    dd.innerHTML = list.map((x, i) => `<button type="button" data-i="${i}"><span>${esc(x.label)}</span>${x.sub ? `<small>${esc(x.sub)}</small>` : ''}</button>`).join('');
+    dd.style.display = list.length ? 'block' : 'none';
+  };
+  input.addEventListener('focus', show);
+  input.addEventListener('input', show);
+  input.addEventListener('blur', () => setTimeout(() => dd.style.display = 'none', 150));
+  dd.addEventListener('mousedown', e => {
+    const b = e.target.closest('button');
+    if (!b) return;
+    e.preventDefault();
+    pick(dd._l[+b.dataset.i]);
+    dd.style.display = 'none';
+  });
+}
+function openProv(id) {
+  const p = provs.find(x => x.id === (id === undefined ? (prov() || {}).id : id));
+  editId = p ? p.id : null;
+  draft = p ? { ...p } : { name: '', type: 'anthropic', url: '', key: '', model: '', models: [] };
+  fillForm(); setMsg('');
+  if (!$('dp').open) $('dp').showModal();
+}
+function renderMods() {
+  const cm = readForm().model;
+  $('mchips').innerHTML = modelList({ ...draft, model: '' }).slice(0, 14).map(m => `<button data-mod="${esc(m)}" class="${m === cm ? 'on' : ''}">${esc(m)}</button>`).join('');
+}
+function fillForm() {
+  $('p-name').value = draft.name; $('p-type').value = draft.type; $('p-url').value = draft.url;
+  $('p-key').value = draft.key || ''; $('p-model').value = draft.model || '';
+  $('pl').innerHTML = provs.map(p => `<button class="${p.id === editId ? 'on' : ''}" data-edit-p="${p.id}">${esc(p.name)}</button>`).join('') + '<button data-edit-p="">+ Baru</button>';
+  $('pre').innerHTML = '<span class="lbl" style="padding:0 6px 0 0">Saran cepat:</span>' + PRESETS.map(x => `<button data-pre="${esc(x.name)}">${esc(x.name)}</button>`).join('');
+  renderMods();
+}
+function readForm() {
+  draft = { ...draft, name: $('p-name').value.trim(), type: $('p-type').value, url: $('p-url').value.trim(), key: $('p-key').value.trim(), model: $('p-model').value.trim() };
+  return draft;
+}
+function applyPreset(x) {
+  const k = $('p-key').value;
+  draft = { ...draft, name: x.name, type: x.type, url: x.url, models: [...x.models], model: x.models[0] || '', key: k };
+  fillForm();
+}
+function setMsg(t, c) { $('p-msg').textContent = t; $('p-msg').className = 'note ' + (c || ''); }
+const netErr = e => e instanceof TypeError ? 'Proxy tidak terjangkau. Jalankan: node proxy.js' : e.message;
+async function fetchModels() {
+  const p = readForm();
+  if (!p.url) return setMsg('Isi Base URL dulu.', 'bad');
+  setMsg('Mengambil daftar model…');
+  try {
+    const r = await relay(p, modelsUrl(p));
+    const d = await r.json();
+    if (!r.ok) throw new Error(`HTTP ${r.status}: ${JSON.stringify(d).slice(0, 300)}${hint(r.status)}`);
+    const ids = (d.data || d.models || []).map(x => x.id || (x.name || '').replace(/^models\//, '')).filter(Boolean);
+    if (!ids.length) return setMsg('Server tidak mengembalikan daftar model. Ketik nama model secara manual.', 'bad');
+    draft.models = ids; if (!p.model) draft.model = ids[0];
+    fillForm(); setMsg(`${ids.length} model ditemukan. Klik kolom Model untuk memilih.`, 'good');
+  } catch (e) { setMsg(netErr(e), 'bad'); }
+}
+async function testProv() {
+  const p = readForm();
+  if (!p.url || !p.model) return setMsg('Isi Base URL dan Model dulu.', 'bad');
+  setMsg('Mengetes…');
+  const t0 = performance.now();
+  try {
+    const r = await relay(p, chatUrl(p), { method: 'POST', headers: { 'content-type': 'application/json' }, body: JSON.stringify(buildBody(p, [{ role: 'user', text: 'Balas satu kata: ok', atts: [] }], false, 64)) });
+    const raw = await r.text();
+    if (!r.ok) throw new Error(`HTTP ${r.status}: ${raw.slice(0, 300)}${hint(r.status)}`);
+    const am = { text: '', think: '' };
+    parseFull(JSON.parse(raw), p.type, am);
+    setMsg(`Berhasil (${Math.round(performance.now() - t0)} ms). Balasan: ${am.text.trim().slice(0, 80) || '(kosong)'}`, 'good');
+  } catch (e) { setMsg(netErr(e), 'bad'); }
+}
+function saveProv() {
+  const p = readForm();
+  if (!p.name || !p.url) return setMsg('Nama dan Base URL wajib diisi.', 'bad');
+  if (!/^https?:\/\//.test(p.url)) return setMsg('Base URL harus diawali http:// atau https://', 'bad');
+  if (!p.model) return setMsg('Isi atau pilih model dulu.', 'bad');
+  if (editId) provs = provs.map(x => x.id === editId ? { ...p, id: editId } : x);
+  else { p.id = uid(); provs.push(p); editId = p.id; }
+  provId = editId; saveProvs(); renderHead(); $('dp').close(); toast('Tersimpan: ' + p.name + ' · ' + p.model);
+}
+
+/* ---------- Event ---------- */
+$('in').addEventListener('input', fit);
+$('in').addEventListener('keydown', e => { if (e.key === 'Enter' && !e.shiftKey && !e.isComposing) { e.preventDefault(); send(); } });
+$('in').addEventListener('paste', e => {
+  const f = [...e.clipboardData.files];
+  if (f.length) { e.preventDefault(); return addFiles(f); }
+  const t = e.clipboardData.getData('text');
+  if (t.length >= PASTE_MIN) { // teks panjang jadi lampiran, seperti Claude
+    e.preventDefault();
+    if (pending.length >= 6) return toast('Maksimal 6 lampiran per pesan.');
+    pending.push({ name: `Teks tertempel (${t.split('\n').length} baris).txt`, kind: 'text', data: t.slice(0, 200000) });
+    renderPend();
+  }
+});
+$('go').onclick = () => send();
+$('att').onclick = () => $('file').click();
+$('file').onchange = e => { addFiles([...e.target.files]); e.target.value = ''; };
+$('new').onclick = newChat;
+$('menu').onclick = () => toggleSide();
+$('bk').onclick = () => toggleSide(false);
+$('q').oninput = e => { filter = e.target.value.trim(); renderList(); };
+$('theme').onclick = () => {
+  const d = document.documentElement.dataset.theme === 'dark' ? 'light' : 'dark';
+  document.documentElement.dataset.theme = d; localStorage.setItem(K.t, d);
+};
+$('bp').onclick = () => openProv();
+$('pk').onclick = e => { e.stopPropagation(); renderMenu(); $('pkm').classList.toggle('show'); };
+['dragover', 'dragenter'].forEach(n => document.addEventListener(n, e => { e.preventDefault(); $('box').classList.add('drag'); }));
+['dragleave', 'drop'].forEach(n => document.addEventListener(n, e => { e.preventDefault(); $('box').classList.remove('drag'); }));
+document.addEventListener('drop', e => { if (e.dataTransfer.files.length) addFiles([...e.dataTransfer.files]); });
+document.addEventListener('keydown', e => {
+  if (e.key === 'Escape') { closeMenu(); if (busy) stop(); }
+  if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === 'k') { e.preventDefault(); toggleSide(true); $('q').focus(); }
+  if (e.target.id === 'pk-in' && e.key === 'Enter') {
+    const p = prov(), v = e.target.value.trim();
+    if (p && v) { p.model = v; saveProvs(); renderHead(); closeMenu(); toast('Model: ' + v); }
+  }
+});
+function renameChat(id) {
+  const sp = $('list').querySelector(`.item[data-id="${id}"] span`);
+  if (!sp) return;
+  sp.contentEditable = true; sp.focus();
+  document.getSelection().selectAllChildren(sp);
+  sp.onblur = () => {
+    sp.contentEditable = false;
+    const t = sp.textContent.trim();
+    if (t) sessions.find(s => s.id === id).title = t.slice(0, 60);
+    save(); renderList(); render();
+  };
+  sp.onkeydown = ev => { if (ev.key === 'Enter') { ev.preventDefault(); sp.blur(); } };
+}
+document.addEventListener('dblclick', e => {
+  const sp = e.target.closest('.item span');
+  if (sp) renameChat(sp.parentElement.dataset.id);
+});
+document.addEventListener('click', e => {
+  if (!e.target.closest('.pkw')) closeMenu();
+  const t = e.target.closest('button,.item');
+  if (!t) return;
+  const d = t.dataset;
+  if (t.id === 'p-eye') { const k = $('p-key'); k.type = k.type === 'password' ? 'text' : 'password'; return; }
+  if (d.close) return $(d.close).close();
+  if (d.vm) return viewAtt(d.vm);
+  if (d.rm !== undefined) { pending.splice(+d.rm, 1); return renderPend(); }
+    if (d.ren) return renameChat(d.ren);
+  if (d.del) { e.stopPropagation(); return delChat(d.del); }
+  if (d.idea) { $('in').value = d.idea; fit(); return $('in').focus(); }
+  if (d.pp) { const p = provs.find(x => x.id === d.pp); provId = p.id; p.model = d.pmod; saveProvs(); renderHead(); closeMenu(); return toast(p.name + ' · ' + p.model); }
+  if (d.manage !== undefined) { closeMenu(); return openProv(d.manage || undefined); }
+  if (d.pre) { readForm(); return applyPreset(PRESETS.find(x => x.name === d.pre)); }
+  if (d.mod) { readForm(); draft.model = d.mod; return fillForm(); }
+  if (d.editP !== undefined) return openProv(d.editP || null);
+  if (d.edit !== undefined) {
+    const s = cur(), m = s.msgs[+d.edit];
+    $('in').value = m.text; pending = m.atts || []; s.msgs.length = +d.edit;
+    save(); renderPend(); fit(); render(); return $('in').focus();
+  }
+  if (t.hasAttribute('data-more')) { const ub = t.closest('.u').querySelector('.ub'); ub.classList.toggle('open'); t.textContent = ub.classList.contains('open') ? 'Ciutkan' : 'Tampilkan semua'; return; }
+  if (t.hasAttribute('data-copy')) { copy(t.closest('.code').querySelector('code').textContent); return flash(t); }
+  if (d.dl !== undefined) {
+    const a = document.createElement('a');
+    a.href = URL.createObjectURL(new Blob([t.closest('.code').querySelector('code').textContent], { type: 'text/plain' }));
+    a.download = 'kode.' + (EXT[d.dl.toLowerCase()] || 'txt');
+    a.click(); URL.revokeObjectURL(a.href); return;
+  }
+  if (d.msg !== undefined) { copy(cur().msgs[+d.msg].text); return flash(t); }
+  if (t.hasAttribute('data-regen')) { cur().msgs.pop(); save(); return send(true); }
+  if (t.hasAttribute('data-retry')) return send(true);
+  if (t.classList.contains('item') && !t.querySelector('span[contenteditable=true]')) { curId = d.id; errMsg = ''; save(); renderList(); render(); if (mob()) toggleSide(false); }
+});
+/* form API */
+combo($('p-name'), $('dd-name'), () => PRESETS.map(x => ({ label: x.name, sub: x.url, x })), it => { readForm(); applyPreset(it.x); });
+combo($('p-model'), $('dd-model'), () => modelList({ ...readForm(), model: '' }).map(m => ({ label: m })), it => { readForm(); draft.model = it.label; fillForm(); });
+$('p-name').addEventListener('input', e => { const x = PRESETS.find(p => p.name.toLowerCase() === e.target.value.trim().toLowerCase()); if (x) { readForm(); applyPreset(x); } });
+$('p-type').onchange = () => readForm();
+$('p-url').oninput = () => { readForm(); renderMods(); };
+$('p-model').addEventListener('input', renderMods);
+$('p-fetch').onclick = fetchModels;
+$('p-test').onclick = testProv;
+$('p-save').onclick = saveProv;
+$('p-del').onclick = e => {
+  const b = e.target;
+  if (!editId) return setMsg('Belum ada API tersimpan untuk dihapus.', 'bad');
+  if (!b.dataset.arm) { b.dataset.arm = 1; b.textContent = 'Yakin? Klik lagi'; setTimeout(() => { delete b.dataset.arm; b.textContent = 'Hapus API ini'; }, 3000); return; }
+  delete b.dataset.arm; b.textContent = 'Hapus API ini';
+  provs = provs.filter(p => p.id !== editId); provId = (provs[0] || {}).id; saveProvs(); renderHead();
+  openProv(provs.length ? provId : null); toast('API dihapus.');
+};
+/* form pengaturan */
+$('bs').onclick = () => { $('s-proxy').value = cfg.proxy; $('s-sys').value = cfg.system; $('s-temp').value = cfg.temp; $('s-max').value = cfg.max; $('ds').showModal(); };
+$('s-save').onclick = () => {
+  cfg = { proxy: $('s-proxy').value.trim() || 'http://localhost:3001', system: $('s-sys').value.trim(), temp: $('s-temp').value, max: +$('s-max').value || 8192 };
+  localStorage.setItem(K.c, JSON.stringify(cfg)); $('ds').close(); ping(); toast('Pengaturan disimpan.');
+};
+$('s-exp').onclick = exportChat;
+$('s-clr').onclick = e => {
+  const b = e.target;
+  if (b.dataset.arm) { delete b.dataset.arm; b.textContent = 'Hapus semua riwayat'; sessions = []; $('ds').close(); newChat(); return toast('Semua riwayat dihapus.'); }
+  b.dataset.arm = 1; b.textContent = 'Yakin? Klik lagi';
+  setTimeout(() => { delete b.dataset.arm; b.textContent = 'Hapus semua riwayat'; }, 3000);
+};
+
+/* ---------- Init ---------- */
+document.documentElement.dataset.theme = localStorage.getItem(K.t) || (matchMedia('(prefers-color-scheme:dark)').matches ? 'dark' : 'light');
+if (localStorage.getItem(K.sb)) document.body.classList.add('sbc');
+if (!sessions.length) sessions.unshift({ id: uid(), title: 'Chat baru', ts: Date.now(), msgs: [] });
+if (!cur()) curId = sessions[0].id;
+icons(); save(); renderList(); renderHead(); render(); ping(); setInterval(ping, 10000);
+if (!provs.length) { toast('Mulai dengan menambahkan API kamu.'); openProv(null); }
+</script>
+<script src="memory.js"></script>
+
+<script src="orchestra.js"></script>
+<script>orcInit();</script>
+<script src="media.js"></script>
+<script>mediaInit();</script>
+</body>
+</html>

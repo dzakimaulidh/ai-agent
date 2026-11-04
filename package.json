@@ -1,0 +1,14 @@
+{
+  "name": "jaki-agent",
+  "version": "0.1.0",
+  "description": "Asisten AI berbasis web dengan multi-agent (Orchestra), memori lokal SQLite, dan pembuatan video/animasi. Semua provider lewat proxy lokal.",
+  "main": "proxy.js",
+  "scripts": {
+    "start": "node proxy.js"
+  },
+  "engines": {
+    "node": ">=18"
+  },
+  "private": true,
+  "license": "SEE LICENSE IN LICENSE"
+}

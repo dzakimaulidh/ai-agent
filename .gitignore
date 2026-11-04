@@ -1,0 +1,21 @@
+# Memori pribadi (jangan pernah di-commit)
+jaki-memory.db
+jaki-memory.db-wal
+jaki-memory.db-shm
+jaki-memory.db-journal
+*.db
+
+# Node
+node_modules/
+npm-debug.log*
+
+# Rahasia
+.env
+.env.*
+
+# Sistem dan editor
+.DS_Store
+Thumbs.db
+.vscode/
+.idea/
+*.log
