@@ -10,6 +10,8 @@
 //   JAKI_DB           lokasi file database memori. Default jaki-memory.db di sebelah file ini.
 //   JAKI_ORIGINS      origin halaman tambahan yang diizinkan, pisahkan dengan koma. Contoh: http://pc-saya.local:5500
 //   JAKI_ALLOW_NULL   isi 1 jika halaman dibuka langsung dari file:// (origin "null"). Default ditolak karena bisa disalahgunakan situs lain.
+
+
 const http = require('http');
 const path = require('path');
 
@@ -216,7 +218,6 @@ async function handle(req, res) {
   }
 }
 
-// Satu error di satu request tidak boleh mematikan seluruh proxy.
 http.createServer(async (req, res) => {
   try { await handle(req, res); }
   catch (e) { if (!res.headersSent) json(res, 500, { error: e.message }); else res.end(); }
